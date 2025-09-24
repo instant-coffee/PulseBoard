@@ -16,55 +16,51 @@ A small SaaS-ish app where users can browse orders/subscriptions and see analyti
 
 ```mermaid
 flowchart LR
-  %% Direction
-  %% LR = left-to-right for wide README layouts
-  %% You can switch to TD if you prefer top-to-bottom
-
   %% Nodes
-  client[React TS SPA]
-  cf[CloudFront]
-  s3site[S3 static site]
+  client["React TS SPA"]
+  cf["CloudFront"]
+  s3_site["S3 static site"]
 
-  apigw[API Gateway]
-  lambda[Lambda (Node TS)]
+  api_gw["API Gateway"]
+  lambda_fn["Lambda (Node TS)"]
 
-  rdsproxy[RDS Proxy]
-  aurora[Aurora Serverless v2 (Postgres/MySQL)]
+  rds_proxy["RDS Proxy"]
+  aurora["Aurora Serverless v2 (Postgres/MySQL)"]
 
-  evb[EventBridge schedule]
-  etl[ETL Lambda]
-  s3export[S3 export]
-  snowflake[Snowflake STAGE + COPY INTO tables]
+  evb["EventBridge schedule"]
+  etl["ETL Lambda"]
+  s3_export["S3 export"]
+  snowflake["Snowflake STAGE + COPY INTO tables"]
 
   %% Edges
-  client -- HTTPS --> cf
-  cf --> s3site
-  cf -- "/api/*" --> apigw --> lambda
+  client -- "HTTPS" --> cf
+  cf --> s3_site
+  cf -- "/api/*" --> api_gw --> lambda_fn
 
-  lambda --> rdsproxy --> aurora
+  lambda_fn --> rds_proxy --> aurora
 
-  evb --> etl --> s3export --> snowflake
+  evb --> etl --> s3_export --> snowflake
 
-  %% Optional grouping for readability
-  subgraph Edge_and_Static_Content [Edge + Static Delivery]
+  %% Optional grouping (purely visual)
+  subgraph Edge_and_Static_Content ["Edge + Static Delivery"]
     cf
-    s3site
+    s3_site
   end
 
-  subgraph API_Tier [API Path]
-    apigw
-    lambda
+  subgraph API_Tier ["API Path"]
+    api_gw
+    lambda_fn
   end
 
-  subgraph Data_Tier [Data Tier]
-    rdsproxy
+  subgraph Data_Tier ["Data Tier"]
+    rds_proxy
     aurora
   end
 
-  subgraph ETL_and_Warehouse [ETL + Warehouse]
+  subgraph ETL_and_Warehouse ["ETL + Warehouse"]
     evb
     etl
-    s3export
+    s3_export
     snowflake
   end
 ```
@@ -79,72 +75,49 @@ flowchart LR
 ### File Structure
 
 ```mermaid
-mindmap
-  root((pulseboard))
-    "frontend/ — React + TS (Vite)"
-      src/
-        "api/ — typed fetch clients (zod-validated)"
-        "components/ — accessible, responsive UI"
-        pages/
-        types/
-      index.html
-    services/
-      "api/ — Lambda handlers"
-        handlers/
-        "db/ — Kysely/Drizzle + query helpers"
-        types/
-      "etl/ — ETL Lambda → S3 and Snowflake COPY trigger"
-    "infra/ — AWS CDK (TypeScript)"
-      bin/
-      lib/
-    db/
-      "migrations/ — SQL migrations (Drizzle or plain SQL)"
-      seed/
-    snowflake/
-      "00_setup.sql — storage integration / stage / tables"
-      "10_copy_into.sql — COPY INTO scripts for dev/stage/prod"
-    ".github/workflows/"
-      "ci.yml — lint/test/typecheck"
-      "deploy.yml — cdk synth/deploy + CloudFront invalidation"
-    package.json
-```
-
-```mermaid
 flowchart TD
   A["pulseboard/"]
-  A --> B["frontend/ — React + TS (Vite)"]
+
+  %% frontend
+  A --> B["frontend/ (React + TS, Vite)"]
   B --> B1["src/"]
-  B1 --> B1a["api/ — typed fetch clients (zod-validated)"]
-  B1 --> B1b["components/ — accessible, responsive UI"]
+  B1 --> B1a["api/ (typed fetch clients; zod-validated)"]
+  B1 --> B1b["components/ (accessible, responsive UI)"]
   B1 --> B1c["pages/"]
   B1 --> B1d["types/"]
   B --> B2["index.html"]
 
+  %% services
   A --> C["services/"]
-  C --> C1["api/ — Lambda handlers"]
+  C --> C1["api/ (Lambda handlers)"]
   C1 --> C1a["handlers/"]
-  C1 --> C1b["db/ — Kysely/Drizzle + query helpers"]
+  C1 --> C1b["db/ (Kysely/Drizzle + query helpers)"]
   C1 --> C1c["types/"]
-  C --> C2["etl/ — ETL Lambda → S3 and Snowflake COPY trigger"]
+  C --> C2["etl/ (ETL Lambda -> S3 + Snowflake COPY trigger)"]
 
-  A --> D["infra/ — AWS CDK (TypeScript)"]
+  %% infra
+  A --> D["infra/ (AWS CDK, TypeScript)"]
   D --> D1["bin/"]
   D --> D2["lib/"]
 
+  %% db
   A --> E["db/"]
-  E --> E1["migrations/ — SQL migrations (Drizzle or plain SQL)"]
+  E --> E1["migrations/ (SQL migrations: Drizzle or plain SQL)"]
   E --> E2["seed/"]
 
+  %% snowflake
   A --> F["snowflake/"]
-  F --> F1["00_setup.sql — storage integration / stage / tables"]
-  F --> F2["10_copy_into.sql — COPY INTO scripts for dev/stage/prod"]
+  F --> F1["00_setup.sql (storage integration / stage / tables)"]
+  F --> F2["10_copy_into.sql (COPY INTO scripts: dev/stage/prod)"]
 
+  %% workflows
   A --> G[".github/workflows/"]
-  G --> G1["ci.yml — lint/test/typecheck"]
-  G --> G2["deploy.yml — cdk synth/deploy + CloudFront invalidation"]
+  G --> G1["ci.yml (lint / test / typecheck)"]
+  G --> G2["deploy.yml (cdk synth/deploy + CloudFront invalidation)"]
 
+  %% root
   A --> H["package.json"]
-```  
+```
 
 Milestones
 
