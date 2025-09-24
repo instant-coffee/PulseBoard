@@ -14,16 +14,59 @@ A small SaaS-ish app where users can browse orders/subscriptions and see analyti
 
 ## Architecture
 
-```text
-[React TS SPA] --(HTTPS)--> [CloudFront] -> [S3 static site]
-                                 |
-                                 +--> [/api/* -> API Gateway] -> [Lambda (Node TS)]
-                                                         |
-                                                         +--> [RDS Proxy] -> [Aurora Serverless v2 (Postgres/MySQL)]
-                                                         |
-                                                         +--> [EventBridge schedule -> ETL Lambda] -> [S3 export]
-                                                                                           |
-                                                                                           +--> [Snowflake STAGE + COPY INTO tables]
+```mermaid
+flowchart LR
+  %% Direction
+  %% LR = left-to-right for wide README layouts
+  %% You can switch to TD if you prefer top-to-bottom
+
+  %% Nodes
+  client[React TS SPA]
+  cf[CloudFront]
+  s3site[S3 static site]
+
+  apigw[API Gateway]
+  lambda[Lambda (Node TS)]
+
+  rdsproxy[RDS Proxy]
+  aurora[Aurora Serverless v2 (Postgres/MySQL)]
+
+  evb[EventBridge schedule]
+  etl[ETL Lambda]
+  s3export[S3 export]
+  snowflake[Snowflake STAGE + COPY INTO tables]
+
+  %% Edges
+  client -- HTTPS --> cf
+  cf --> s3site
+  cf -- "/api/*" --> apigw --> lambda
+
+  lambda --> rdsproxy --> aurora
+
+  evb --> etl --> s3export --> snowflake
+
+  %% Optional grouping for readability
+  subgraph Edge_and_Static_Content [Edge + Static Delivery]
+    cf
+    s3site
+  end
+
+  subgraph API_Tier [API Path]
+    apigw
+    lambda
+  end
+
+  subgraph Data_Tier [Data Tier]
+    rdsproxy
+    aurora
+  end
+
+  subgraph ETL_and_Warehouse [ETL + Warehouse]
+    evb
+    etl
+    s3export
+    snowflake
+  end
 ```
 
 ### Why these choices
@@ -64,7 +107,8 @@ mindmap
       "ci.yml — lint/test/typecheck"
       "deploy.yml — cdk synth/deploy + CloudFront invalidation"
     package.json
-```  
+```
+
 ```mermaid
 flowchart TD
   A["pulseboard/"]
