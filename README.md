@@ -11,8 +11,10 @@ A small SaaS-ish app where users can browse orders/subscriptions and see analyti
 - CI/CD via GitHub Actions (build, test, deploy, preview envs)
 - IaC with AWS CDK (TypeScript) to provision everything
 
-### Architecture
 
+## Architecture
+
+```text
 [React TS SPA] --(HTTPS)--> [CloudFront] -> [S3 static site]
                                  |
                                  +--> [/api/* -> API Gateway] -> [Lambda (Node TS)]
@@ -22,8 +24,9 @@ A small SaaS-ish app where users can browse orders/subscriptions and see analyti
                                                          +--> [EventBridge schedule -> ETL Lambda] -> [S3 export]
                                                                                            |
                                                                                            +--> [Snowflake STAGE + COPY INTO tables]
+```
 
-#### Why these choices
+### Why these choices
 
 - Aurora Serverless v2 + RDS Proxy: stable connections for Lambda & great SQL perf.
 - CDK TS: single language end-to-end; easy constructs for CloudFront/S3/API Gateway/RDS.
@@ -32,33 +35,72 @@ A small SaaS-ish app where users can browse orders/subscriptions and see analyti
 
 ### File Structure
 
-pulseboard/
-├─ frontend/                  # React + TS (Vite)
-│  ├─ src/
-│  │  ├─ api/                 # typed fetch clients (zod-validated)
-│  │  ├─ components/          # accessible, responsive UI
-│  │  ├─ pages/
-│  │  └─ types/
-│  └─ index.html
-├─ services/
-│  ├─ api/                    # Lambda handlers
-│  │  ├─ handlers/
-│  │  ├─ db/                  # Kysely/Drizzle + query helpers
-│  │  └─ types/
-│  └─ etl/                    # ETL Lambda → S3 and Snowflake COPY trigger
-├─ infra/                     # AWS CDK (TypeScript)
-│  ├─ bin/
-│  └─ lib/
-├─ db/
-│  ├─ migrations/             # SQL migrations (Drizzle or plain SQL)
-│  └─ seed/
-├─ snowflake/
-│  ├─ 00_setup.sql            # storage integration / stage / tables
-│  └─ 10_copy_into.sql        # COPY INTO scripts for dev/stage/prod
-├─ .github/workflows/
-│  ├─ ci.yml                  # lint/test/typecheck
-│  └─ deploy.yml              # cdk synth/deploy + CloudFront invalidation
-└─ package.json
+```mermaid
+mindmap
+  root((pulseboard))
+    "frontend/ — React + TS (Vite)"
+      src/
+        "api/ — typed fetch clients (zod-validated)"
+        "components/ — accessible, responsive UI"
+        pages/
+        types/
+      index.html
+    services/
+      "api/ — Lambda handlers"
+        handlers/
+        "db/ — Kysely/Drizzle + query helpers"
+        types/
+      "etl/ — ETL Lambda → S3 and Snowflake COPY trigger"
+    "infra/ — AWS CDK (TypeScript)"
+      bin/
+      lib/
+    db/
+      "migrations/ — SQL migrations (Drizzle or plain SQL)"
+      seed/
+    snowflake/
+      "00_setup.sql — storage integration / stage / tables"
+      "10_copy_into.sql — COPY INTO scripts for dev/stage/prod"
+    ".github/workflows/"
+      "ci.yml — lint/test/typecheck"
+      "deploy.yml — cdk synth/deploy + CloudFront invalidation"
+    package.json
+```  
+```mermaid
+flowchart TD
+  A["pulseboard/"]
+  A --> B["frontend/ — React + TS (Vite)"]
+  B --> B1["src/"]
+  B1 --> B1a["api/ — typed fetch clients (zod-validated)"]
+  B1 --> B1b["components/ — accessible, responsive UI"]
+  B1 --> B1c["pages/"]
+  B1 --> B1d["types/"]
+  B --> B2["index.html"]
+
+  A --> C["services/"]
+  C --> C1["api/ — Lambda handlers"]
+  C1 --> C1a["handlers/"]
+  C1 --> C1b["db/ — Kysely/Drizzle + query helpers"]
+  C1 --> C1c["types/"]
+  C --> C2["etl/ — ETL Lambda → S3 and Snowflake COPY trigger"]
+
+  A --> D["infra/ — AWS CDK (TypeScript)"]
+  D --> D1["bin/"]
+  D --> D2["lib/"]
+
+  A --> E["db/"]
+  E --> E1["migrations/ — SQL migrations (Drizzle or plain SQL)"]
+  E --> E2["seed/"]
+
+  A --> F["snowflake/"]
+  F --> F1["00_setup.sql — storage integration / stage / tables"]
+  F --> F2["10_copy_into.sql — COPY INTO scripts for dev/stage/prod"]
+
+  A --> G[".github/workflows/"]
+  G --> G1["ci.yml — lint/test/typecheck"]
+  G --> G2["deploy.yml — cdk synth/deploy + CloudFront invalidation"]
+
+  A --> H["package.json"]
+```  
 
 Milestones
 
