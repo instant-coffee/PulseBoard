@@ -158,3 +158,17 @@ Milestones
 - Perf & Hardening
 
   - CloudFront caching, compression; API timeouts & retries; RDS Proxy warm pool; alarms (CW Alarms) and logs.
+
+#### Stretch Goals
+
+- Snowpipe auto-ingest (S3 event → Snowflake pipe) and incremental models.
+- Feature flags for frontend experiments.
+- Observability: CW Metrics & Alarms, structured logs, error budgets.
+- Edge: CloudFront Function for simple headers or AB testing variant cookie.
+
+#### Libraries & why
+- Kysely or Drizzle (DB): light, type-safe, serverless-friendly.
+- TanStack Query (data fetching/caching/retries).
+- Zod (runtime validation for API in/out).
+- Nivo or Recharts (quick, reliable charts for dashboards).
+- AWS CDK (TypeScript IaC).
