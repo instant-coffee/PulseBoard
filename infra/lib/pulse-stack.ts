@@ -10,13 +10,6 @@ export class PulseStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'InfraQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
-
     // START STACK CODE
 
     // 1) Private S3 bucket for static assets
@@ -30,19 +23,8 @@ export class PulseStack extends cdk.Stack {
       autoDeleteObjects: true,             // dev convenience only
     });
 
-    // // 2) Origin Access Control (OAC) - modern replacement for OAI
-    // // Why OAC? Better security and performance than OAI.
-    // const oac = new cloudfront.OriginAccessControl(this, 'OAC', {
-    //   originAccessControlConfig: {
-    //     name: 'PulseBoardOAC',
-    //     description: 'OAC for PulseBoard S3 bucket',
-    //     originAccessControlOriginType: 's3',
-    //     signingBehavior: 'always',
-    //     signingProtocol: 'sigv4'
-    //   }
-    // });
 
-    // 3) Security headers (basic hardened defaults)
+    // 2) Security headers (basic hardened defaults)
     const securityHeaders = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeaders', {
       securityHeadersBehavior: {
         contentSecurityPolicy: {
@@ -67,7 +49,7 @@ export class PulseStack extends cdk.Stack {
       }
     });
 
-    // 4) CloudFront distribution in front of S3
+    // 3) CloudFront distribution in front of S3
     // Why CloudFront? Global edge caching, TLS, compression, signed URLs (later), etc.
     const s3Origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket);
 
@@ -82,7 +64,7 @@ export class PulseStack extends cdk.Stack {
       comment: 'Pulseboard web distribution',
     });
 
-    // 5) Optional: Deploy a placeholder index.html so you immediately see something
+    // 4) Optional: Deploy a placeholder index.html so you immediately see something
     new s3deploy.BucketDeployment(this, 'DeployPlaceholder', {
       sources: [s3deploy.Source.data('index.html', `
         <!doctype html>
@@ -100,7 +82,7 @@ export class PulseStack extends cdk.Stack {
       prune: false
     });
 
-    // 6) Outputs: make it easy to grab the URL in CI and locally
+    // 5) Outputs: make it easy to grab the URL in CI and locally
     new CfnOutput(this, 'WebUrl', {
       value: `https://${distribution.domainName}`,
       description: 'CloudFront URL of the site'
